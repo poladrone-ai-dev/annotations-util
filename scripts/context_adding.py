@@ -10,7 +10,7 @@ import xml.etree.ElementTree as ET
 import os
 import glob
 
-XML_PATH = r'C:\Users\Brian Sia\Desktop\context-adding\test' # path where the xml resides
+XML_PATH = r'D:\training_data\young_and_mature_20\combined' # path where the xml resides
 os.chdir(XML_PATH)
 
 IMG_WIDTH = 0

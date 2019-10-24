@@ -9,7 +9,7 @@ import numpy as np  # linear algebra
 # For example, running this (by clicking run or pressing Shift+Enter) will list the files in the input directory
 
 import os
-print(os.listdir(r"C:\Users\Brian Sia\Desktop\image-augmentation\input"))
+# print(os.listdir(r"C:\Users\Brian Sia\Desktop\image-augmentation\input"))
 
 # Any results you write to the current directory are saved as output.
 
@@ -122,19 +122,21 @@ class Data_augmentation:
         :param path: the path to store the new image
         '''
         img = self.image.copy()
-        img_flip = self.flip(img, vflip=True, hflip=False)
-        img_rot = self.rotate(img)
-        img_gaussian = self.AddNoise('gauss', img)
+        v_flip = self.flip(img, vflip=True, hflip=False)
+        h_flip = self.flip(img, vflip=False, hflip=True)
+        # img_rot = self.rotate(img)
+        # img_gaussian = self.AddNoise('gauss', img)
 
         name_int = self.name[:len(self.name) - 4]
-        cv2.imwrite(save_path + '%s' % str(name_int) + '_vflip.jpg', img_flip)
-        cv2.imwrite(save_path + '%s' % str(name_int) + '_rot.jpg', img_rot)
-        cv2.imwrite(save_path + '%s' % str(name_int) + '_GaussianNoise.jpg', img_gaussian)
+        cv2.imwrite(save_path + '%s' % str(name_int) + '-f0.jpg', v_flip)
+        cv2.imwrite(save_path + '%s' % str(name_int) + '-f1.jpg', h_flip)
+        # cv2.imwrite(save_path + '%s' % str(name_int) + '_rot.jpg', img_rot)
+        # cv2.imwrite(save_path + '%s' % str(name_int) + '_GaussianNoise.jpg', img_gaussian)
 
 
 def main():
-    file_dir = r"C:\Users\Brian Sia\Desktop\image-augmentation\input\\"
-    output_path = r"C:\Users\Brian Sia\Desktop\image-augmentation\output\\"
+    file_dir = r"D:\training_data\20_context\images\\"
+    output_path = r"D:\training_data\20_context\images_aug\\"
 
     for root, _, files in os.walk(file_dir):
         print(root)

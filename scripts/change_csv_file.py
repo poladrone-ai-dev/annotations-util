@@ -1,8 +1,13 @@
+"""
+    Changes the csv file generated from Pascal VOC XML into YOLO format.
+    path/to/img xmin,ymin,xmax,ymax,class xmin,ymin,xmax,ymax,class
+
+"""
 import os
 import fileinput
 import sys
 
-filepath = r'C:\Users\Deployment\Desktop\keras-yolo3\train.txt'
+filepath = r'D:\training_data\young_and_mature_20\combined\result\combined\bbox.txt'
 
 def replaceAll(file, searchExp, replaceExp):
     for line in fileinput.input(file, inplace=1):
@@ -15,7 +20,8 @@ def replaceFirst(file, searchExp, replaceExp):
         line = line.replace(searchExp, replaceExp, 1)
         sys.stdout.write(line)
 
-replaceAll(filepath, "", r'C:\Users\Deployment\Desktop\palmtree-data-pix-segamat\c1203\images\\')
+replaceFirst(filepath, "", r'D:\training_data\young_and_mature_20\combined\result\combined\AugmentedImages\\')
 replaceFirst(filepath, ',', ' ')
 replaceAll(filepath, "palm0", "0")
 replaceAll(filepath, "palm1", "1")
+replaceAll(filepath, "palm2", "2")
