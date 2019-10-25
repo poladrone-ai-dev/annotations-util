@@ -16,33 +16,33 @@ import os
 import xml.etree.ElementTree as ET
 from PIL import Image
 
-input_path = r'D:\training_data\young_and_mature_20' # path where the images and xml resides
+input_path = r'D:\training_data\young_and_mature_20\combined' # path where the images and xml resides
 output_path = r"D:\training_data\young_and_mature_20\combined\result"
-dirName = "combined"
+# dirName = "combined"
 
 # input images
-data_path = "{}\\{}".format(input_path, dirName)
+data_path = "{}".format(input_path)
 
 # input XML files
-xml_path = "{}\\{}".format(input_path, dirName)
+xml_path = "{}".format(input_path)
 
 # output path for augmented images
-output_img_path = "{}\\{}\\AugmentedImages".format(output_path, dirName)
+output_img_path = "{}\\AugmentedImages".format(output_path)
 
 if not os.path.exists(output_img_path):
     os.makedirs(output_img_path)
 
 # output path for xml
-xmlPath ="{}\\{}\\AugmentedXML\\".format(output_path, dirName)
+xmlPath ="{}\\AugmentedXML\\".format(output_path)
 
 if not os.path.exists(xmlPath):
     os.makedirs(xmlPath)
 
 # output bounding box text file
-out_path = "{}\\{}\\bb_box.txt".format(output_path, dirName)
+out_path = "{}\\bb_box.txt".format(output_path)
 
 # output bounding box multitext file
-converted_annotation_in_txt_file = "{}\\{}\\converted_annotation_in_txt\\".format(output_path, dirName)
+converted_annotation_in_txt_file = "{}\\converted_annotation_in_txt\\".format(output_path)
 
 
 def dataAugmentation(imgPath):
