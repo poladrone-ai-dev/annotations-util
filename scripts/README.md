@@ -1,4 +1,4 @@
-### Preprocessing Images & VOC annotations into YOLO format  
+# Preprocessing Images & VOC annotations into YOLO format  
 
 This is a work in progress pipeline for preprocessing images and VOC annotations into YOLO format.
 
@@ -17,7 +17,7 @@ change_path_name.py -> context_adding.py -> data_augmentation.py -> change_csv_f
 ```<INPUT_PATH>```: Directory which contains images and VOC annotation XML files 
 ```<OUTPUT_PATH>```: Targetted empty directory to store augmented images and annotations in YOLO format 
 
-# Example of Folder Structure
+### Example of Folder Structure
 ```<INPUT_PATH>```
 |-- c0411-009.jpg
 |-- c0411-009.xml
