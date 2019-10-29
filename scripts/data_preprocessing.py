@@ -40,8 +40,8 @@ output_path.mkdir(parents=True, exist_ok=True)
 if __name__ == "__main__":
 	change_path_name(dataset_path, output_path)
 	if (args.context):
-		context_adding(output_path, args.context)
+		context_adding(dataset_path, args.context)
 	else:
-		# default context == 1
-		context_adding(output_path)
+		# default context == 0
+		context_adding(dataset_path, 0)
 	data_augmentation(dataset_path, output_path)

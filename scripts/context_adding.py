@@ -9,16 +9,15 @@
 import xml.etree.ElementTree as ET
 import os
 import glob
-def context_adding(XML_PATH, contextPercentage = 1):
-    print("Context adding...")
+def context_adding(XML_PATH, contextPercentage = 0):
+    print("Adding {} % context".format(contextPercentage))
     # XML_PATH = r'D:\training_data\young_and_mature_20\combined' # path where the xml resides
     os.chdir(XML_PATH)
 
     IMG_WIDTH = 0
     IMG_HEIGHT = 0
 
-    CONTEXT = contextPercentage # varies between 0 and 1
-
+    CONTEXT = float(contextPercentage) # varies between 0 and 1
     for f in glob.glob('*.xml'):
         tree = ET.parse(f)
         root = tree.getroot()
@@ -49,7 +48,7 @@ def context_adding(XML_PATH, contextPercentage = 1):
 
                 for bndbox in child.iter():
                     if bndbox.tag != "bndbox":
-                        print(bndbox.tag + ": " + bndbox.text)
+                        # print(bndbox.tag + ": " + bndbox.text)
 
                         if bndbox.tag == "xmin":
                             newBound = int(bndbox.text) - (CONTEXT * WIDTH)
@@ -58,7 +57,7 @@ def context_adding(XML_PATH, contextPercentage = 1):
 
                             newBound = round(newBound)
                             bndbox.text = bndbox.text.replace(bndbox.text, str(newBound))
-                            print(bndbox.tag + ": " + bndbox.text)
+                            # print(bndbox.tag + ": " + bndbox.text)
 
                         if bndbox.tag == "xmax":
                             newBound = int(bndbox.text) + (CONTEXT * WIDTH)
@@ -67,7 +66,7 @@ def context_adding(XML_PATH, contextPercentage = 1):
 
                             newBound = round(newBound)
                             bndbox.text = bndbox.text.replace(bndbox.text, str(newBound))
-                            print(bndbox.tag + ": " + bndbox.text)
+                            # print(bndbox.tag + ": " + bndbox.text)
 
                         if bndbox.tag == "ymin":
                             newBound = int(bndbox.text) - (CONTEXT * HEIGHT)
@@ -76,7 +75,7 @@ def context_adding(XML_PATH, contextPercentage = 1):
 
                             newBound = round(newBound)
                             bndbox.text = bndbox.text.replace(bndbox.text, str(newBound))
-                            print(bndbox.tag + ": " + bndbox.text)
+                            # print(bndbox.tag + ": " + bndbox.text)
 
                         if bndbox.tag == "ymax":
                             newBound = int(bndbox.text) + (CONTEXT * HEIGHT)
@@ -85,6 +84,6 @@ def context_adding(XML_PATH, contextPercentage = 1):
 
                             newBound = round(newBound)
                             bndbox.text = bndbox.text.replace(bndbox.text, str(newBound))
-                            print(bndbox.tag + ": " + bndbox.text)
+                            # print(bndbox.tag + ": " + bndbox.text)
 
                         tree.write(f)
