@@ -1,9 +1,6 @@
 
 """
-Executable script on terminal 
--Modified from https://medium.co
-if not os.path.exists(converted_annotation_in_txt_file):
-    os.makedirs(converted_annotm/@bhuwanbhattarai/image-data-augmentation-and-parsing-into-an-xml-file-in-pascal-voc-format-for-object-detection-4cca3d24b33b
+-Modified from https://medium.com/@bhuwanbhattarai/image-data-augmentation-and-parsing-into-an-xml-file-in-pascal-voc-format-for-object-detection-4cca3d24b33b
 Specify the
 @input_path dataset which consists of images and XML annotation in Pascal VOC Format and
 @output_path for the augmented dataset.
