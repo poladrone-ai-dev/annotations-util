@@ -5,21 +5,21 @@
 import xml.etree.ElementTree as ET
 import os
 import glob
-def context_reduction(XML_PATH=None, contextPercentage = 0.05):
-    print("Adding {} % context".format(contextPercentage))
+
+def context_reduction(XML_PATH=None):
+    # print("Reducing {} % context".format(contextPercentage))
     XML_PATH = r'D:\training_data\images-after-relabel-20191016\young' # path where the xml resides
     os.chdir(XML_PATH)
 
     IMG_WIDTH = 0
     IMG_HEIGHT = 0
 
-    CONTEXT = float(contextPercentage) # varies between 0 and 1
+    CONTEXT = 0 # varies between 0 and 1
     for f in glob.glob('*.xml'):
         tree = ET.parse(f)
         root = tree.getroot()
 
         for child in tree.iter():
-
             if child.tag == "size":
                 for dimensions in child.iter():
                     if dimensions.tag == "width":
@@ -27,9 +27,22 @@ def context_reduction(XML_PATH=None, contextPercentage = 0.05):
                     if dimensions.tag == "height":
                         IMG_HEIGHT = int(dimensions.text)
 
+            if child.tag == "object":
+                for prop in child.iter():
+                    if prop.tag == "name":
+                        if prop.text == "palm1":
+                            CONTEXT = float(0.1)
+                            print("palm1 detected. adding 10% context")
+                        if prop.text == "palm2":
+                            CONTEXT = float(0.1)
+                            print("palm2 detected. adding 10% context")
+                        if prop.text == "palm3":
+                            CONTEXT = float(0.05)
+                            print("palm3 detected. adding 5% context")
+
             if child.tag == "bndbox":
                 WIDTH = 0
-                HEIGHT = 0
+                HEIGHT = 0 
                 xmin = 0
                 xmax = 0
                 ymin = 0
