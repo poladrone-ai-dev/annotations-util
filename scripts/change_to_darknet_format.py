@@ -13,6 +13,7 @@ parser.add_argument("--test", type=float, required=True, help="test data split (
 parser.add_argument("--valid", type=float, required=True, help="valid data split (0-1)")
 parser.add_argument("--width", type=int, required=True, help="input image width")
 parser.add_argument("--height", type=int, required=True, help="input image height")
+parser.add_argument("--classes", type=str, required=True, help="text file with class names")
 opt = parser.parse_args()
 
 filepath = opt.input
@@ -152,7 +153,7 @@ if __name__ == "__main__":
     if os.path.isfile(filename_file):
         os.remove(filename_file)
 
-    with open(os.path.join(os.path.dirname(opt.input), "classes.txt")) as class_fp:
+    with open(opt.classes) as class_fp:
         for line in class_fp:
             classes.append(line.replace("\n", ""))
 
