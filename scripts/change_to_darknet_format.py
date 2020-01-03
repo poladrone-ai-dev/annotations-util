@@ -3,31 +3,124 @@ import fileinput
 import sys
 import random
 import argparse
+import shutil
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--annotation", type=str, required=True, help="input text file with name and bbox")
+parser.add_argument("--input", type=str, required=True, help="input text file with name and bbox")
 parser.add_argument("--output", type=str, required=True, help="output directory for conversion")
+parser.add_argument("--train", type=float, required=True, help="training data split (0-1)")
+parser.add_argument("--test", type=float, required=True, help="test data split (0-1)")
+parser.add_argument("--valid", type=float, required=True, help="valid data split (0-1)")
+parser.add_argument("--width", type=int, required=True, help="input image width")
+parser.add_argument("--height", type=int, required=True, help="input image height")
 opt = parser.parse_args()
 
-filepath = opt.annotation
-label_path = os.path.join(opt.output, "labels")
-image_path = os.path.join(opt.output, "images")
+filepath = opt.input
+# image_path = os.path.join(opt.output, "images")
 filename_file = os.path.join(opt.output, "filename.txt")
-valid_file = os.path.join(opt.output, "valid.txt")
 
-classes = ['0', '1', '2', '3'] # fill this with your class names
-WIDTH = 500
-HEIGHT = 500
+classes = [] # fill this with your class names
+WIDTH = opt.width
+HEIGHT = opt.height
 current_file = r''
 
-# palm0_count = 0
-# palm1_count = 0
-# palm2_count = 0
-# palm3_count = 0
+def move_files():
 
-def split_file(file, out1, out2, percentage=0.7, isShuffle=True, seed=123):
+    if os.path.isdir(os.path.join(opt.output, "train")):
+        shutil.rmtree(os.path.join(opt.output, "train"))
+
+    if os.path.isdir(os.path.join(opt.output, "valid")):
+        shutil.rmtree(os.path.join(opt.output, "valid"))
+
+    if os.path.isdir(os.path.join(opt.output, "test")):
+        shutil.rmtree(os.path.join(opt.output, "test"))
+
+    os.mkdir(os.path.join(opt.output, "train"))
+    os.mkdir(os.path.join(opt.output, "valid"))
+    os.mkdir(os.path.join(opt.output, "test"))
+
+    with open(os.path.join(opt.output, "train.txt")) as train_file:
+        for line in train_file:
+            image_source = line.replace("\n", "")
+            image_dest = os.path.join(opt.output, "train", os.path.basename(image_source))
+            shutil.copyfile(image_source, image_dest)
+
+            label_source = line.replace(".jpg\n", ".txt")
+            label_dest = os.path.join(opt.output, "train", os.path.basename(label_source))
+            shutil.copyfile(label_source, label_dest)
+
+    with open(os.path.join(opt.output, "valid.txt")) as valid_file:
+        for line in valid_file:
+            image_source = line.replace("\n", "")
+            image_dest = os.path.join(opt.output, "valid", os.path.basename(image_source))
+            shutil.copyfile(image_source, image_dest)
+
+            label_source = line.replace(".jpg\n", ".txt")
+            label_dest = os.path.join(opt.output, "valid", os.path.basename(label_source))
+            shutil.copyfile(label_source, label_dest)
+
+    with open(os.path.join(opt.output, "test.txt")) as test_file:
+        for line in test_file:
+            image_source = line.replace("\n", "")
+            image_dest = os.path.join(opt.output, "test", os.path.basename(image_source))
+            shutil.copyfile(image_source, image_dest)
+
+            label_source = line.replace(".jpg\n", ".txt")
+            label_dest = os.path.join(opt.output, "test", os.path.basename(label_source))
+            shutil.copyfile(label_source, label_dest)
+
+def split_test_data(file):
+    num_data = sum(1 for line in open(file))
+    print(num_data)
+
+    all_data = []
+    all_data_no_augment = []
+    train_data = []
+    test_data = []
+
+    with open(file, 'r', encoding="utf-8") as fp:
+        for line in fp:
+            all_data.append(line.replace("\n", ""))
+
+    all_data_no_augment = [data for data in all_data if "-f0." not in data and "-f1." not in data]
+
+    while len(test_data) < int(opt.test * num_data):
+        filename = all_data_no_augment[random.randrange(len(all_data_no_augment)) ]
+        filename_no_ext = filename[:-4]
+        filename_vflip = filename_no_ext + "-f0.jpg"
+        filename_hflip = filename_no_ext + "-f1.jpg"
+        # print("Filename: " + filename)
+        # print("vflip: " + filename_vflip)
+        # print("hflip: " + filename_hflip)
+
+        if filename_vflip in all_data and filename_hflip in all_data:
+            test_data.append(filename)
+            test_data.append(filename_vflip)
+            test_data.append(filename_hflip)
+            all_data.remove(filename)
+            all_data.remove(filename_vflip)
+            all_data.remove(filename_hflip)
+            num_data -= 3
+
+    if os.path.isfile(os.path.join(opt.output, "train_valid.txt")):
+        os.remove(os.path.join(opt.output, "train_valid.txt"))
+
+    if os.path.isfile(os.path.join(opt.output, "test.txt")):
+        os.remove(os.path.join(opt.output, "test.txt"))
+
+    with open(os.path.join(opt.output, "train_valid.txt"), 'a') as train_file:
+        for line in all_data:
+            train_file.write(line + "\n")
+
+    with open(os.path.join(opt.output, "test.txt"), 'a') as test_file:
+        for line in test_data:
+            test_file.write(line + "\n")
+
+def split_file(file, out1, out2, seed=123):
     """Splits a file in 2 given the `percentage` to go in the large file."""
     random.seed(seed)
+    percentage = (1 - opt.test) * opt.train
+
     with open(file, 'r', encoding="utf-8") as fin, \
             open(out1, 'w') as foutBig, \
             open(out2, 'w') as foutSmall:
@@ -41,52 +134,68 @@ def split_file(file, out1, out2, percentage=0.7, isShuffle=True, seed=123):
 
 seen_lines = []  # stored seen lines here so that no lines written are duplicated
 
-with open(filepath, 'r') as fp:
-    for line in fp:
-        filename = line.split(' ')[0][:-4]
-        values = line.split(' ')[1].split(',')
-        values[-1] = values[-1].replace('\n', '')
-        current_file = os.path.join(label_path, filename + '.txt')
-        image_file = os.path.join(image_path, os.path.basename(filename) + '.jpg')
+if __name__ == "__main__":
 
-        x_center = (int(values[2]) + int(values[0])) / (2 * WIDTH)
-        y_center = (int(values[3]) + int(values[1])) / (2 * HEIGHT)
-        box_width = (int(values[2]) - int(values[0])) / WIDTH
-        box_height = (int(values[3]) - int(values[1])) / HEIGHT
+    # if opt.train + opt.test + opt.valid != 1:
+    #     print(opt.train + opt.test + opt.valid)
+    #     print("Data split does not add up to 1. Please enter the correct data split again.")
+    #     sys.exit()
 
-        # multiclass training
-        class_index = int(classes.index(values[4]))
+    if opt.train > 1.0 or opt.test > 1.0 or opt.valid > 1.0:
+        print("One of the data split is greater than 1. Please enter correct data split again.")
+        sys.exit()
 
-        # if class_index == 0:
-        #     palm0_count += 1
-        #
-        # if class_index == 1:
-        #     palm1_count += 1
-        #
-        # if class_index == 2:
-        #     palm2_count += 1
-        #
-        # if class_index == 3:
-        #     palm3_count += 1
-        print("Current file: " + current_file)
-        anno = str(class_index) + " " + str(x_center) + " " + str(y_center) + " " + str(box_width) + " " + str(box_height) + '\n'
+    if opt.train < 0 or opt.test < 0 or opt.valid < 0:
+        print("One of the data split is less than 0. Please enter correct data split again.")
+        sys.exit()
 
-        with open(filename_file, 'a') as train_fp:
-            if image_file not in seen_lines:
-                train_fp.write(image_file)
-                train_fp.write('\n')
-                seen_lines.append(image_file)
+    if os.path.isfile(filename_file):
+        os.remove(filename_file)
 
-        with open(current_file, 'a') as out_fp:
-            out_fp.write(anno)
+    with open(os.path.join(os.path.dirname(opt.input), "classes.txt")) as class_fp:
+        for line in class_fp:
+            classes.append(line.replace("\n", ""))
 
-split_file(os.path.join(opt.output, "filename.txt"),
-           os.path.join(opt.output, "train.txt"),
-           os.path.join(opt.output, "valid.txt"))
+    with open(filepath, 'r') as fp:
+        for line in fp:
+            filename = line.split(' ')[0][:-4]
+            values = line.split(' ')[1].split(',')
+            values[-1] = values[-1].replace('\n', '')
+            current_file = os.path.join(opt.output, filename + '.txt')
+            image_file = line.split(' ')[0]
 
-os.remove(filename_file)
-#
-# print("Palm0 count: " + str(palm0_count))
-# print("Palm1 count: " + str(palm1_count))
-# print("Palm2 count: " + str(palm2_count))
-# print("Palm3 count: " + str(palm3_count))
+            x_center = (int(values[2]) + int(values[0])) / (2 * WIDTH)
+            y_center = (int(values[3]) + int(values[1])) / (2 * HEIGHT)
+            box_width = (int(values[2]) - int(values[0])) / WIDTH
+            box_height = (int(values[3]) - int(values[1])) / HEIGHT
+
+            # multiclass training
+            class_index = int(classes.index(values[4]))
+
+            anno = str(class_index) + " " + str(x_center) + " " + str(y_center) + " " + str(box_width) + " " + str(box_height) + '\n'
+            # anno = str(class_index) + " " + str(int(values[0])) + " " + str(int(values[1])) + " " + str(int(values[2])) + " " + \
+            #        str(int(values[3])) + '\n'
+
+            print("output: " + opt.output)
+            print("current file: " + current_file)
+
+            with open(filename_file, 'a') as train_fp:
+                if image_file not in seen_lines:
+                    train_fp.write(image_file)
+                    train_fp.write('\n')
+                    seen_lines.append(image_file)
+
+            with open(current_file, 'a') as out_fp:
+                out_fp.write(anno)
+
+    split_test_data(os.path.join(opt.output, "filename.txt"))
+
+    split_file(os.path.join(opt.output, "train_valid.txt"),
+               os.path.join(opt.output, "train.txt"),
+               os.path.join(opt.output, "valid.txt")
+    )
+
+    os.remove(filename_file)
+    os.remove(os.path.join(opt.output, "train_valid.txt"))
+
+    move_files()
