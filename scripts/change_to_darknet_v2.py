@@ -78,7 +78,7 @@ def split_test_data(file, output_path, test_split):
     all_data_no_augment = [data for data in all_data if "-f0." not in data and "-f1." not in data]
 
     while len(test_data) <= int(test_split * num_data):
-        filename = all_data_no_augment[random.randrange(len(all_data_no_augment)) ]
+        filename = all_data_no_augment[random.randrange(len(all_data_no_augment))]
         filename_no_ext = filename[:-4]
         filename_vflip = filename_no_ext + "-f0.jpg"
         filename_hflip = filename_no_ext + "-f1.jpg"
