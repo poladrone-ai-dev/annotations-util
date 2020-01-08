@@ -3,6 +3,7 @@ import os
 import shutil
 import stat
 from pathlib import Path
+from kmeans import YOLO_Kmeans
 from change_path_name import change_path_name
 from context_adding import context_adding
 from data_augmentation import data_augmentation
@@ -52,3 +53,7 @@ if __name__ == "__main__":
 
 	darknet_output_path = os.path.join(output_path, "darknet_output")
 	darknet_convert(bbox_file, darknet_output_path, class_file, args.train, args.valid, args.test)
+
+	cluster_number = 9
+	kmeans = YOLO_Kmeans(cluster_number, bbox_file)
+	kmeans.txt2clusters(darknet_output_path)

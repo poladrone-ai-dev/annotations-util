@@ -92,13 +92,23 @@ class YOLO_Kmeans:
         result = result[np.lexsort(result.T[0, None])]
         self.result2txt(result)
 
-        with open(os.path.join(output_path, "anchorsv2.txt"), 'a') as fp:
+        if os.path.isfile(os.path.join(output_path, "anchorsv2.txt")):
+            os.remove(os.path.join(output_path, "anchorsv2.txt"))
+
+        if os.path.isfile(os.path.join(output_path, "anchors.txt")):
+            os.remove(os.path.join(output_path, "anchors.txt"))
+
+        with open(os.path.join(output_path, "anchorsv2.txt"), 'a') as anchorv2_fp:
             print("K anchors:\n {}".format(result))
             print("Accuracy: {:.2f}%".format(
                 self.avg_iou(all_boxes, result) * 100))
-            fp.write("K anchors:\n {}".format(result))
-            fp.write("Accuracy: {:.2f}%".format(
+            anchorv2_fp.write("K anchors:\n {}".format(result))
+            anchorv2_fp.write("Accuracy: {:.2f}%".format(
                 self.avg_iou(all_boxes, result) * 100))
+
+        with open(os.path.join(output_path, "anchors.txt"), 'w') as anchor_fp:
+            for boxes in result:
+                anchor_fp.write(str(boxes[0]) + "," + str(boxes[1]) + ", ")
 
 
 if __name__ == "__main__":
@@ -107,7 +117,6 @@ if __name__ == "__main__":
     opt = parser.parse_args()
 
     cluster_number = 9
-    filename = "2012_train.txt"
     kmeans = YOLO_Kmeans(cluster_number, opt.input)
 
     output_dir = Path(opt.input).parent.absolute()
