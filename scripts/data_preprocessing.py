@@ -11,26 +11,16 @@ from change_to_darknet_v2 import darknet_convert
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument(
-'-i',
-'--input',
-dest='dataset_path',
-help='Path to dataset data (images and annotations).',
-required=True)
+parser.add_argument('-i', '--input', dest='dataset_path', help='Path to dataset data (images and annotations).', required=True)
 
-parser.add_argument(
-'-o',
-'--output',
-dest='output_path',
-help='Path to save the processed data',
-required=True)
+parser.add_argument('-o', '--output', dest='output_path', help='Path to save the processed data', required=True)
 
 # context varies between 0 and 1
-parser.add_argument(
-'-c',
-'--context',
-dest='context',
-help='Context percentage for context adding (varies between 0 and 1)')
+parser.add_argument('-c', '--context', dest='context', help='Context percentage for context adding (varies between 0 and 1)')
+
+parser.add_argument('--train', type=float, required=False, help="train split (between 0 and 1)", default=0.7)
+parser.add_argument('--valid', type=float, required=False, help="valid split (between 0 and 1)", default=0.2)
+parser.add_argument('--test', type=float, required=False, help="test split (between 0 and 1)", default=0.1)
 
 args = parser.parse_args()
 
@@ -61,4 +51,4 @@ if __name__ == "__main__":
 	class_file = os.path.join(output_path, "augmentation_result", "classes.txt")
 
 	darknet_output_path = os.path.join(output_path, "darknet_output")
-	darknet_convert(bbox_file, darknet_output_path, class_file)
+	darknet_convert(bbox_file, darknet_output_path, class_file, args.train, args.valid, args.test)

@@ -73,6 +73,8 @@ def split_test_data(file, output_path, test_split):
         for line in fp:
             all_data.append(line.replace("\n", ""))
 
+    all_data_orig = len(all_data)
+
     all_data_no_augment = [data for data in all_data if "-f0." not in data and "-f1." not in data]
 
     while len(test_data) <= int(test_split * num_data):
@@ -106,7 +108,7 @@ def split_test_data(file, output_path, test_split):
 
     train_valid_len = file_len(os.path.join(output_path, "train_valid.txt"))
 
-    return [len(all_data) , train_valid_len]
+    return [all_data_orig , train_valid_len]
 
 def split_file(file, out1, out2, file_count, train_split, seed=123):
     """Splits a file in 2 given the `percentage` to go in the large file."""
@@ -116,26 +118,37 @@ def split_file(file, out1, out2, file_count, train_split, seed=123):
 
     try:
         percentage = (all_count * train_split) / train_valid_count
+        print("Train Percentage: " + str(percentage))
+
     except ZeroDivisionError:
         print("Divide by 0 error.")
         sys.exit()
 
-    with open(file, 'r', encoding="utf-8") as fin, \
-            open(out1, 'w') as foutBig, \
-            open(out2, 'w') as foutSmall:
-
+    train_valid_data = []
+    with open(file, 'r', encoding="utf-8") as fin:
         for line in fin:
-            r = random.random()
-            if r < percentage:
-                foutBig.write(line)
-            else:
-                foutSmall.write(line)
+            train_valid_data.append(line.replace('\n', ""))
 
-seen_lines = []  # stored seen lines here so that no lines written are duplicated
+    random.shuffle(train_valid_data)
+    split_index = int(percentage * len(train_valid_data))
+
+    train_data = train_valid_data[:split_index]
+    valid_data = train_valid_data[split_index:]
+
+    with open(out1, 'w') as foutTrain:
+        for data in train_data:
+            foutTrain.write(data + '\n')
+
+    with open(out2, 'w') as foutValid:
+        for data in valid_data:
+            foutValid.write(data + '\n')
+
 
 def darknet_convert(bbox_file, output_path, classes_file, train_split=0.7, valid_split=0.2, test_split=0.1):
 
     filename_file = os.path.join(output_path, "filename.txt")
+    seen_lines = []  # stored seen lines here so that no lines written are duplicated
+
     if train_split > 1.0 or test_split > 1.0 or valid_split > 1.0:
         print("One of the data split is greater than 1. Please enter correct data split again.")
         sys.exit()
