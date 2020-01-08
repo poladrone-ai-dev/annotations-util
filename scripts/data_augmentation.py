@@ -23,9 +23,11 @@ def imgAugmentation(imgPath, output_path):
     newName = newName[-1]
     # copy original image
     new_path = os.path.join(output_path, newName)
+
     if not os.path.isfile(new_path):
         cv2.imwrite(new_path, img)
     f_points = [0, 1]
+
     for f in f_points:
         f_img = cv2.flip(img, f)
         newName = imgPath.split("\\") 
@@ -48,6 +50,7 @@ def data_augmentation(input_path, output_path):
             imgAugmentation(xml_file, output_path)
 
     pwd_lines = []
+    class_names = []
     for xml_file in xml_paths:
         if xml_file.endswith(".xml"):
             et = ET.parse(xml_file)
@@ -64,6 +67,9 @@ def data_augmentation(input_path, output_path):
 
             for element_obj in element_objs:
                 class_name = element_obj.find('name').text # return name tag ie class of disease from xml file
+
+                if class_name not in class_names:
+                    class_names.append(class_name)
 
                 obj_bbox = element_obj.find('bndbox')
                 x1 = int(round(float(obj_bbox.find('xmin').text)))
@@ -121,7 +127,7 @@ def data_augmentation(input_path, output_path):
                     augmented_element_objs = augmented_element.findall('object')
 
                     augmented_filename = augmented_element.find('filename')
-                    augmented_path = augmented_element.find('path')
+                    # augmented_path = augmented_element.find('path')
                     _augmented_filename, _augmented_file_ext = os.path.splitext(augmented_filename.text)
 
                     isFilenameAug = False
@@ -129,14 +135,14 @@ def data_augmentation(input_path, output_path):
                     for aug_map in f_points_str:
                         if aug_map in augmented_filename.text:
                             isFilenameAug = True
-                        if aug_map in augmented_path.text:
-                            isFilepathAug = True
+                        # if aug_map in augmented_path.text:
+                        #     isFilepathAug = True
 
                     if not isFilenameAug:
                         augmented_filename.text = _augmented_filename + "-" + f_str + _augmented_file_ext
 
-                    if not isFilepathAug:
-                        augmented_path.text = os.path.join(os.path.dirname(augmented_path.text), augmented_filename.text)
+                    # if not isFilepathAug:
+                    #     augmented_path.text = os.path.join(os.path.dirname(augmented_path.text), augmented_filename.text)
 
                     aug_obj_bbox = augmented_element_objs[element_obj_idx].find('bndbox')
                     aug_obj_bbox.find('xmin').text = str(f_x1)
@@ -147,7 +153,14 @@ def data_augmentation(input_path, output_path):
                     augmented_et.write(new_xml)
 
                 element_obj_idx += 1
-     
+
+    if os.path.isfile(os.path.join(output_path, "class.txt")):
+        os.remove(os.path.join(output_path, "class.txt"))
+
+    with open(os.path.join(output_path, "classes.txt"), 'a') as class_fp:
+        for class_name in class_names:
+            class_fp.write(class_name + '\n')
+
     #print(pwd_lines)
     if len(pwd_lines) > 0 :
         with open(out_path, 'w') as f:
