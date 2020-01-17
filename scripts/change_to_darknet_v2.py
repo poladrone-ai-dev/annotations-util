@@ -75,7 +75,8 @@ def split_test_data(file, output_path, test_split):
 
     all_data_orig = len(all_data)
 
-    all_data_no_augment = [data for data in all_data if "-f0." not in data and "-f1." not in data]
+    all_data_no_augment = [data for data in all_data if "-f0." not in data and "-f1." not in data
+                           and "_rotate_" not in data and "_gaussian_blur" not in data]
 
     while len(test_data) <= int(test_split * num_data):
         filename = all_data_no_augment[random.randrange(len(all_data_no_augment))]
@@ -178,6 +179,7 @@ def darknet_convert(bbox_file, output_path, classes_file, train_split=0.7, valid
         for line in fp:
             filename_no_ext = line.split(' ')[0][:-4]
             image_filename = line.split(" ")[0]
+
             values = line.split(' ')[1].split(',')
             values[-1] = values[-1].replace('\n', '')
             label_file = os.path.join(output_path, "label", os.path.basename(filename_no_ext) + '.txt')
@@ -191,6 +193,7 @@ def darknet_convert(bbox_file, output_path, classes_file, train_split=0.7, valid
 
             print("Image: " + image_filename)
 
+            print(values)
             x_center = (int(values[2]) + int(values[0])) / (2 * WIDTH)
             y_center = (int(values[3]) + int(values[1])) / (2 * HEIGHT)
             box_width = (int(values[2]) - int(values[0])) / WIDTH
