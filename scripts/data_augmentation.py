@@ -21,32 +21,33 @@ def ShrinkBbox(img, bbox):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     topleft = [int(bbox[0][0]), int(bbox[0][1])]
     bottomright = [int(bbox[0][2]), int(bbox[0][3])]
-    topright = [int(bbox[0][1]), int(bbox[0][2])]
+    topright = [int(bbox[0][2]), int(bbox[0][1])]
     bottomleft = [int(bbox[0][0]), int(bbox[0][3])]
-    print(img[topleft[0], topleft[1]])
-
 
     if [img[topleft[0], topleft[1]][0], img[topleft[0], topleft[1]][1], img[topleft[0], topleft[1]][2]] == [0,0,0]:
+        # print("Shrinking top left corner: " + str(topleft))
         while [img[topleft[0], topleft[1]][0], img[topleft[0], topleft[1]][1], img[topleft[0], topleft[1]][2]] == [0,0,0]:
-            topleft[0] += 10
-            topleft[1] += 10
-
-    if [img[topright[0], topright[1]][0], img[topright[0], topright[1]][1], img[topright[0], topright[1]][2]] == [0,0,0]:
-        while [img[topright[0], topright[1]][0], img[topright[0], topright[1]][1], img[topright[0], topright[1]][2]] == [0,0,0]:
-            topright[0] -= 10
-            topright[1] += 10
-
-    if [img[bottomleft[0], bottomleft[1]][0], img[bottomleft[0], bottomleft[1]][1], img[bottomleft[0], bottomleft[1]][2]] == [0,0,0]:
-        while [img[bottomleft[0], bottomleft[1]][0], img[bottomleft[0], bottomleft[1]][1], img[bottomleft[0], bottomleft[1]][2]] == [0,0,0]:
-            bottomleft[0] += 10
-            bottomleft[1] -= 10
+            topleft[0] += 5
+            topleft[1] += 5
+            # print([img[topleft[0], topleft[1]][0], img[topleft[0], topleft[1]][1], img[topleft[0], topleft[1]][2]] )
+        # print("After shrinking: " + str(topleft))
 
     if [img[bottomright[0], bottomright[1]][0], img[bottomright[0], bottomright[1]][1], img[bottomright[0], bottomright[1]][2]] == [0,0,0]:
         while [img[bottomright[0], bottomright[1]][0], img[bottomright[0], bottomright[1]][1], img[bottomright[0], bottomright[1]][2]] == [0,0,0]:
-            bottomright[0] -= 10
-            bottomright[1] -= 10
+            bottomright[0] -= 5
+            bottomright[1] -= 5
 
-    return [[topleft[0], topleft[1], bottomright[2], bottomright[3]]]
+    if [img[topright[0], topright[1]][0], img[topright[0], topright[1]][1], img[topright[0], topright[1]][2]] == [0,0,0]:
+        while [img[topright[0], topright[1]][0], img[topright[0], topright[1]][1], img[topright[0], topright[1]][2]] == [0,0,0]:
+            topright[0] -= 5
+            topright[1] += 5
+
+    if [img[bottomleft[0], bottomleft[1]][0], img[bottomleft[0], bottomleft[1]][1], img[bottomleft[0], bottomleft[1]][2]] == [0,0,0]:
+        while [img[bottomleft[0], bottomleft[1]][0], img[bottomleft[0], bottomleft[1]][1], img[bottomleft[0], bottomleft[1]][2]] == [0,0,0]:
+            bottomleft[0] += 5
+            bottomleft[1] -= 5
+
+    return [[topleft[0], topleft[1], bottomright[0], bottomright[1]]]
 
 def GaussianBlur(imgPath, xml_path, output_path, pwd_lines, class_names):
     img = cv2.imread(imgPath)
@@ -112,6 +113,7 @@ def ImageRotate(imgPath, output_path, xml_file, angle, pwd_lines, class_names):
 
     # dst = cv2.warpAffine(img, rotation_mat, (bound_w, bound_h))
     dst = cv2.warpAffine(img, rotation_mat, (width, height))
+
     cv2.imwrite(new_path, dst)
 
     xml_dst = os.path.splitext(new_path)[0] + ".xml"
@@ -134,6 +136,9 @@ def ImageRotate(imgPath, output_path, xml_file, angle, pwd_lines, class_names):
         corners = bbox_utils.GetCorners(array)
         rotated_coords = bbox_utils.RotateBox(corners, angle, center[0], center[1], height, width)
         new_bbox = bbox_utils.GetEnclosingBox(rotated_coords)
+        # new_bbox = [[min(int(new_bbox[0][0]), width - 1), min(int(new_bbox[0][1]), height - 1),
+        #             min(int(new_bbox[0][2]), width - 1), min(int(new_bbox[0][3]), height - 1)]]
+        #
         # new_bbox = ShrinkBbox(rotated_img, new_bbox)
 
         obj_bbox.find('xmin').text = str(int(new_bbox[0][0]))
@@ -317,8 +322,11 @@ def RandomShear(imgPath, output_path, xml_file, pwd_lines, class_names, shear_fa
         x1 += int(y1 * abs(shear_factor))
         x2 += int(y2 * abs(shear_factor))
 
-        lines = [new_path, ' ', str(int(x1)), ',', str(int(y1)),
-                 ',', str(int(x2)), ',', str(int(y2)), ',', class_name, '\n']
+        new_bbox = ShrinkBbox(img, [[min(x1, width - 1), min(y1, height - 1), min(x2, width - 1), min(y2, height - 1)]])
+
+        lines = [new_path, ' ', str(int(new_bbox[0][0])), ',', str(int(new_bbox[0][1])),
+                 ',', str(new_bbox[0][2]), ',', str(new_bbox[0][3]), ',', class_name, '\n']
+
         pwd_lines.append(lines)
 
     et.write(xml_dst)
@@ -327,7 +335,7 @@ def RandomShear(imgPath, output_path, xml_file, pwd_lines, class_names, shear_fa
 def data_augmentation(input_path, output_path):
     pwd_lines = []
     class_names = []
-    angles = [60, 120, 180]
+    angles = [60, 120]
 
     print("Augmenting the Data...")
     # output bounding box text file
@@ -343,12 +351,12 @@ def data_augmentation(input_path, output_path):
             print("Performing Gaussian blur on " + file)
             pwd_lines, class_names = GaussianBlur(file, xml_path, output_path, pwd_lines, class_names)
 
-            for angle in angles:
-                print("Performing " + str(angle) + " degrees rotation on " + file)
-                pwd_lines, class_names = ImageRotate(file, output_path, xml_path, angle, pwd_lines, class_names)
-
-            print("Performing shearing on " + file)
-            pwd_lines, class_names = RandomShear(file, output_path, xml_path, pwd_lines, class_names)
+            # for angle in angles:
+            #     print("Performing " + str(angle) + " degrees rotation on " + file)
+            #     pwd_lines, class_names = ImageRotate(file, output_path, xml_path, angle, pwd_lines, class_names)
+            #
+            # print("Performing shearing on " + file)
+            # pwd_lines, class_names = RandomShear(file, output_path, xml_path, pwd_lines, class_names)
 
     if os.path.isfile(os.path.join(output_path, "class.txt")):
         os.remove(os.path.join(output_path, "class.txt"))
@@ -357,12 +365,14 @@ def data_augmentation(input_path, output_path):
         for class_name in class_names:
             class_fp.write(class_name + '\n')
 
-    #print(pwd_lines)
     if len(pwd_lines) > 0 :
-        with open(out_path, 'w') as f:
-            # print("Augmented Data:")
+        with open(out_path, 'a') as f:
+
             for line in pwd_lines:
-                # print(line[0])
                 f.writelines(line)
+                gt_file = os.path.splitext(line[0])[0] + ".txt"
+                fp = open(gt_file, "a+")
+                fp.write(line[10] + " " + line[2] + " " + line[4] + " " + line[6] + " " + line[8] + "\n")
+            fp.close()
                 
     print('End')

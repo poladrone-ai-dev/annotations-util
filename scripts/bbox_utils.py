@@ -125,17 +125,3 @@ def GetEnclosingBox(corners):
     final = np.hstack((xmin, ymin, xmax, ymax, corners[:, 8:]))
 
     return final
-
-
-def RandomShear(img_path, shear_factor):
-    if type(shear_factor) == tuple:
-        assert len(shear_factor) == 2, "Invalid range for scaling factor"
-    else:
-        shear_factor = (-shear_factor, shear_factor)
-
-    shear_factor = random.uniform(*shear_factor)
-
-    img = cv2.imread(imgPath)
-    (height, width) = img.shape[:2]
-
-
