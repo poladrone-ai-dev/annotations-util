@@ -17,6 +17,33 @@ import bbox_utils
 import shutil
 import random
 
+def FixBoxBounds(box, img_dim, img_name):
+    if box[0] <= 0:
+        print("Negative x1 found in " + os.path.basename(img_name))
+        with open(os.path.join(os.path.dirname(img_name), "bad_file.txt"), 'a+') as fp:
+            fp.write("Negative x1 found in " + os.path.basename(img_name) + '\n')
+        box[0] = 1
+
+    if box[1] <= 0:
+        print("Negative y1 found in " + os.path.basename(img_name))
+        with open(os.path.join(os.path.dirname(img_name), "bad_file.txt"), 'a+') as fp:
+            fp.write("Negative y1 found in " + os.path.basename(img_name) +'\n')
+        box[1] = 1
+
+    if box[2] >= img_dim[0]:
+        print("X2 bounds exceed found in " + os.path.basename(img_name))
+        with open(os.path.join(os.path.dirname(img_name), "bad_file.txt"), 'a+') as fp:
+            fp.write("X2 bounds exceed found in " + os.path.basename(img_name) +'\n')
+        box[2] = img_dim[0] - 1
+
+    if box[3] >= img_dim[1]:
+        print("Y2 bounds exceed found in " + os.path.basename(img_name))
+        with open(os.path.join(os.path.dirname(img_name), "bad_file.txt"), 'a+') as fp:
+            fp.write("Y2 bounds exceed found in " + os.path.basename(img_name)+ '\n')
+        box[3] = img_dim[1] - 1
+
+    return [box[0], box[1], box[2], box[3]]
+
 def ShrinkBbox(img, bbox):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     topleft = [int(bbox[0][0]), int(bbox[0][1])]
@@ -57,6 +84,7 @@ def GaussianBlur(imgPath, xml_path, output_path, pwd_lines, class_names):
     new_path = os.path.splitext(new_path)[0] + "_gaussian_blur" + os.path.splitext(new_path)[1]
 
     dst = cv2.GaussianBlur(img, (25,25), 0)
+    h, w, channels = dst.shape
     cv2.imwrite(new_path, dst)
 
     new_xml_path = os.path.join(output_path, os.path.splitext(os.path.basename(xml_path))[0] + "_gaussian_blur.xml")
@@ -79,8 +107,9 @@ def GaussianBlur(imgPath, xml_path, output_path, pwd_lines, class_names):
         if class_name not in class_names:
             class_names.append(class_name)
 
-        gaussian_line = [os.path.join(output_path, os.path.splitext(os.path.basename(xml_path))[0]
-                                      + "_gaussian_blur.jpg"),
+        [x1, y1, x2, y2] = FixBoxBounds([x1, y1, x2, y2], [w,h], imgPath)
+
+        gaussian_line = [os.path.join(output_path, os.path.splitext(os.path.basename(xml_path))[0] + "_gaussian_blur.jpg"),
                          ' ', str(x1), ',', str(y1), ',', str(x2), ',', str(y2), ',', class_name, '\n']
         pwd_lines.append(gaussian_line)
 
@@ -136,22 +165,22 @@ def ImageRotate(imgPath, output_path, xml_file, angle, pwd_lines, class_names):
         corners = bbox_utils.GetCorners(array)
         rotated_coords = bbox_utils.RotateBox(corners, angle, center[0], center[1], height, width)
         new_bbox = bbox_utils.GetEnclosingBox(rotated_coords)
-        # new_bbox = [[min(int(new_bbox[0][0]), width - 1), min(int(new_bbox[0][1]), height - 1),
-        #             min(int(new_bbox[0][2]), width - 1), min(int(new_bbox[0][3]), height - 1)]]
-        #
         # new_bbox = ShrinkBbox(rotated_img, new_bbox)
 
-        obj_bbox.find('xmin').text = str(int(new_bbox[0][0]))
-        obj_bbox.find('ymin').text = str(int(new_bbox[0][1]))
-        obj_bbox.find('xmax').text = str(int(new_bbox[0][2]))
-        obj_bbox.find('ymax').text = str(int(new_bbox[0][3]))
+        [x1, y1, x2, y2] = FixBoxBounds([int(new_bbox[0][0]), int(new_bbox[0][1]),
+                                         int(new_bbox[0][2]), int(new_bbox[0][3]) ], [width, height], imgPath)
+
+        obj_bbox.find('xmin').text = str(x1)
+        obj_bbox.find('ymin').text = str(y1)
+        obj_bbox.find('xmax').text = str(x2)
+        obj_bbox.find('ymax').text = str(y2)
 
         class_name = element_obj.find('name').text
         if class_name not in class_names:
             class_names.append(class_name)
 
-        lines = [new_path, ' ', str(int(new_bbox[0][0])), ',', str(int(new_bbox[0][1])),
-                 ',', str(int(new_bbox[0][2])), ',', str(int(new_bbox[0][3])), ',', class_name, '\n']
+        lines = [new_path, ' ', str(x1), ',', str(y1),
+                 ',', str(x2), ',', str(y2), ',', class_name, '\n']
 
         pwd_lines.append(lines)
 
@@ -184,6 +213,7 @@ def ImageFlip(imgPath, output_path, xml_file, pwd_lines, class_names):
     element_objs = element.findall('object')
     element_filename = element.find('filename').text
     img = cv2.imread(element_filename)
+    height, width, channels = img.shape
     element_obj_idx = 0
     img_split = element_filename.strip().split('.jpg')
 
@@ -196,10 +226,20 @@ def ImageFlip(imgPath, output_path, xml_file, pwd_lines, class_names):
             class_names.append(class_name)
 
         obj_bbox = element_obj.find('bndbox')
+
         x1 = int(round(float(obj_bbox.find('xmin').text)))
         y1 = int(round(float(obj_bbox.find('ymin').text)))
         x2 = int(round(float(obj_bbox.find('xmax').text)))
         y2 = int(round(float(obj_bbox.find('ymax').text)))
+
+        if x1 <= 0:
+            x1 = 1
+        if y1 <= 0:
+            y1 = 1
+        if x2 >= width:
+            x2 = width - 1
+        if y2 >= height:
+            y2 >= height - 1
 
         # copying original images to new path
         new_name = img_split[0] + '.jpg'
@@ -232,6 +272,9 @@ def ImageFlip(imgPath, output_path, xml_file, pwd_lines, class_names):
 
             new_name = img_split[0] + '-' + f_str + '.jpg'
             new_path = os.path.join(output_path, new_name)
+
+            [f_x1, f_y1, f_x2, f_y2] = FixBoxBounds([x1, y1, x2, y2], [width, height], imgPath)
+
             lines = [new_path, ' ', str(f_x1), ',', str(f_y1), ',', str(f_x2), ',', str(f_y2), ',', class_name, '\n']
             pwd_lines.append(lines)
             if not os.path.isfile(new_path):
@@ -296,7 +339,6 @@ def RandomShear(imgPath, output_path, xml_file, pwd_lines, class_names, shear_fa
     img = cv2.resize(img, (width, height))
 
     cv2.imwrite(new_path, img)
-    scale_factor_x = nW / width
 
     et = ET.parse(xml_file)
     element = et.getroot()
@@ -324,18 +366,38 @@ def RandomShear(imgPath, output_path, xml_file, pwd_lines, class_names, shear_fa
 
         new_bbox = ShrinkBbox(img, [[min(x1, width - 1), min(y1, height - 1), min(x2, width - 1), min(y2, height - 1)]])
 
-        lines = [new_path, ' ', str(int(new_bbox[0][0])), ',', str(int(new_bbox[0][1])),
-                 ',', str(new_bbox[0][2]), ',', str(new_bbox[0][3]), ',', class_name, '\n']
+        [x1, y1, x2, y2] = FixBoxBounds([int(new_bbox[0][0]), int(new_bbox[0][1]),
+                                         int(new_bbox[0][2]), int(new_bbox[0][3])], [width, height], imgPath)
+
+        lines = [new_path, ' ', str(x1), ',', str(y1),
+                 ',', str(x2), ',', str(y2), ',', class_name, '\n']
 
         pwd_lines.append(lines)
 
     et.write(xml_dst)
     return pwd_lines, class_names
 
+def CheckNegativeData(xml_path, output_path):
+    et = ET.parse(xml_path)
+    element = et.getroot()
+    element_objs = element.findall('object')
+
+    if element_objs == None:
+        print(xml_path + " contains negative data. Excluding it from data augmentation.")
+        with open(os.path.join(output_path, "bad_file.txt"), 'a+') as fp:
+            fp.write(xml_path + " contains negative data. Excluding it from data augmentation.")
+
+        return True
+
+    return False
+
 def data_augmentation(input_path, output_path):
     pwd_lines = []
     class_names = []
     angles = [60, 120]
+
+    if os.path.isfile(os.path.join(output_path, "bad_file.txt")):
+        os.remove(os.path.join(output_path, "bad_file.txt"))
 
     print("Augmenting the Data...")
     # output bounding box text file
@@ -346,17 +408,19 @@ def data_augmentation(input_path, output_path):
     for file in xml_paths:
         if file.endswith(".jpg"):
             xml_path = os.path.splitext(file)[0] + ".xml"
-            print("Performing image flipping on " + file)
-            pwd_lines, class_names = ImageFlip(file, output_path, xml_path, pwd_lines, class_names)
-            print("Performing Gaussian blur on " + file)
-            pwd_lines, class_names = GaussianBlur(file, xml_path, output_path, pwd_lines, class_names)
 
-            # for angle in angles:
-            #     print("Performing " + str(angle) + " degrees rotation on " + file)
-            #     pwd_lines, class_names = ImageRotate(file, output_path, xml_path, angle, pwd_lines, class_names)
-            #
-            # print("Performing shearing on " + file)
-            # pwd_lines, class_names = RandomShear(file, output_path, xml_path, pwd_lines, class_names)
+            if not CheckNegativeData(xml_path, output_path):
+                print("Performing image flipping on " + file)
+                pwd_lines, class_names = ImageFlip(file, output_path, xml_path, pwd_lines, class_names)
+                print("Performing Gaussian blur on " + file)
+                pwd_lines, class_names = GaussianBlur(file, xml_path, output_path, pwd_lines, class_names)
+
+                # for angle in angles:
+                #     print("Performing " + str(angle) + " degrees rotation on " + file)
+                #     pwd_lines, class_names = ImageRotate(file, output_path, xml_path, angle, pwd_lines, class_names)
+                #
+                # print("Performing shearing on " + file)
+                # pwd_lines, class_names = RandomShear(file, output_path, xml_path, pwd_lines, class_names)
 
     if os.path.isfile(os.path.join(output_path, "class.txt")):
         os.remove(os.path.join(output_path, "class.txt"))

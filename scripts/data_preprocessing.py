@@ -10,16 +10,15 @@ from change_path_name import change_path_name
 from context_adding import context_adding
 from data_augmentation import data_augmentation
 from change_to_darknet_v2 import darknet_convert
-# from change_csv_file import change_csv_file
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--input', dest='dataset_path', help='Path to dataset data (images and annotations).', required=True)
 parser.add_argument('-o', '--output', dest='output_path', help='Path to save the processed data', required=True)
-# context varies between 0 and 1
 parser.add_argument('-c', '--context', dest='context', help='Context percentage for context adding (varies between 0 and 1)')
 parser.add_argument('--train', type=float, required=False, help="train split (between 0 and 1)", default=0.7)
 parser.add_argument('--valid', type=float, required=False, help="valid split (between 0 and 1)", default=0.2)
 parser.add_argument('--test', type=float, required=False, help="test split (between 0 and 1)", default=0.1)
+parser.add_argument('--labelImg', type=bool, required=False, help="set flag to true if xml file path needs changing", default=False)
 
 args = parser.parse_args()
 
@@ -36,9 +35,11 @@ def move_data(input, image, split_type):
 	ext = os.path.splitext(image)[1]
 
 	shutil.move(image, os.path.join(input, split_type, image_basename))
-	shutil.move(image_name + ".xml", os.path.join(input, split_type, image_base_no_ext + ".xml"))
-	shutil.move(image_name + ".txt", os.path.join(input, split_type, image_base_no_ext + ".txt"))
 
+	if os.path.isfile(image_name + ".xml"):
+		shutil.move(image_name + ".xml", os.path.join(input, split_type, image_base_no_ext + ".xml"))
+	if os.path.isfile(image_name + ".txt"):
+		shutil.move(image_name + ".txt", os.path.join(input, split_type, image_base_no_ext + ".txt"))
 
 def train_valid_split(input, image_count, train_valid_count):
 	augmentations = ["-f0", "-f1", "_gaussian_blur"]
@@ -110,7 +111,10 @@ def split_test_data(input, image_count):
 	return image_count - len(test_data)
 
 if __name__ == "__main__":
-	change_path_name(dataset_path, output_path)
+
+	if args.labelImg:
+		change_path_name(dataset_path, output_path)
+
 	if (args.context):
 		context_adding(dataset_path, args.context)
 	else:
@@ -161,5 +165,3 @@ if __name__ == "__main__":
 
 	train_valid_count = split_test_data(os.path.join(output_path, "augmentation_result"), image_count)
 	train_valid_split(os.path.join(output_path, "augmentation_result"), image_count, train_valid_count)
-
-
