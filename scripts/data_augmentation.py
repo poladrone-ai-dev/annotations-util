@@ -17,30 +17,34 @@ import bbox_utils
 import shutil
 import random
 
-def FixBoxBounds(box, img_dim, img_name):
+def FixBoxBounds(box, img_dim, img_name, output_path):
     if box[0] <= 0:
         print("Negative x1 found in " + os.path.basename(img_name))
-        with open(os.path.join(os.path.dirname(img_name), "bad_file.txt"), 'a+') as fp:
-            fp.write("Negative x1 found in " + os.path.basename(img_name) + '\n')
+        with open(os.path.join(output_path, "bad_file.txt"), 'a+') as fp:
+            fp.write(img_name + '\n')
         box[0] = 1
+        # shutil.copyfile(img_name, os.path.join(output_path, "bad_files", os.path.basename(img_name)))
 
     if box[1] <= 0:
         print("Negative y1 found in " + os.path.basename(img_name))
-        with open(os.path.join(os.path.dirname(img_name), "bad_file.txt"), 'a+') as fp:
-            fp.write("Negative y1 found in " + os.path.basename(img_name) +'\n')
+        with open(os.path.join(output_path, "bad_file.txt"), 'a+') as fp:
+            fp.write(img_name +'\n')
         box[1] = 1
+        # shutil.copyfile(img_name, os.path.join(output_path, "bad_files", os.path.basename(img_name)))
 
     if box[2] >= img_dim[0]:
         print("X2 bounds exceed found in " + os.path.basename(img_name))
-        with open(os.path.join(os.path.dirname(img_name), "bad_file.txt"), 'a+') as fp:
-            fp.write("X2 bounds exceed found in " + os.path.basename(img_name) +'\n')
+        with open(os.path.join(output_path, "bad_file.txt"), 'a+') as fp:
+            fp.write(img_name +'\n')
         box[2] = img_dim[0] - 1
+        # shutil.copyfile(img_name, os.path.join(output_path, "bad_files", os.path.basename(img_name)))
 
     if box[3] >= img_dim[1]:
         print("Y2 bounds exceed found in " + os.path.basename(img_name))
-        with open(os.path.join(os.path.dirname(img_name), "bad_file.txt"), 'a+') as fp:
-            fp.write("Y2 bounds exceed found in " + os.path.basename(img_name)+ '\n')
+        with open(os.path.join(output_path, "bad_file.txt"), 'a+') as fp:
+            fp.write(img_name +'\n')
         box[3] = img_dim[1] - 1
+        # shutil.copyfile(img_name, os.path.join(output_path, "bad_files", os.path.basename(img_name)))
 
     return [box[0], box[1], box[2], box[3]]
 
@@ -107,7 +111,7 @@ def GaussianBlur(imgPath, xml_path, output_path, pwd_lines, class_names):
         if class_name not in class_names:
             class_names.append(class_name)
 
-        [x1, y1, x2, y2] = FixBoxBounds([x1, y1, x2, y2], [w,h], imgPath)
+        [x1, y1, x2, y2] = FixBoxBounds([x1, y1, x2, y2], [w,h], imgPath, output_path)
 
         gaussian_line = [os.path.join(output_path, os.path.splitext(os.path.basename(xml_path))[0] + "_gaussian_blur.jpg"),
                          ' ', str(x1), ',', str(y1), ',', str(x2), ',', str(y2), ',', class_name, '\n']
@@ -168,7 +172,7 @@ def ImageRotate(imgPath, output_path, xml_file, angle, pwd_lines, class_names):
         # new_bbox = ShrinkBbox(rotated_img, new_bbox)
 
         [x1, y1, x2, y2] = FixBoxBounds([int(new_bbox[0][0]), int(new_bbox[0][1]),
-                                         int(new_bbox[0][2]), int(new_bbox[0][3]) ], [width, height], imgPath)
+                                         int(new_bbox[0][2]), int(new_bbox[0][3]) ], [width, height], imgPath, output_path)
 
         obj_bbox.find('xmin').text = str(x1)
         obj_bbox.find('ymin').text = str(y1)
@@ -273,7 +277,7 @@ def ImageFlip(imgPath, output_path, xml_file, pwd_lines, class_names):
             new_name = img_split[0] + '-' + f_str + '.jpg'
             new_path = os.path.join(output_path, new_name)
 
-            [f_x1, f_y1, f_x2, f_y2] = FixBoxBounds([x1, y1, x2, y2], [width, height], imgPath)
+            [f_x1, f_y1, f_x2, f_y2] = FixBoxBounds([x1, y1, x2, y2], [width, height], imgPath, output_path)
 
             lines = [new_path, ' ', str(f_x1), ',', str(f_y1), ',', str(f_x2), ',', str(f_y2), ',', class_name, '\n']
             pwd_lines.append(lines)
@@ -367,7 +371,7 @@ def RandomShear(imgPath, output_path, xml_file, pwd_lines, class_names, shear_fa
         new_bbox = ShrinkBbox(img, [[min(x1, width - 1), min(y1, height - 1), min(x2, width - 1), min(y2, height - 1)]])
 
         [x1, y1, x2, y2] = FixBoxBounds([int(new_bbox[0][0]), int(new_bbox[0][1]),
-                                         int(new_bbox[0][2]), int(new_bbox[0][3])], [width, height], imgPath)
+                                         int(new_bbox[0][2]), int(new_bbox[0][3])], [width, height], imgPath, output_path)
 
         lines = [new_path, ' ', str(x1), ',', str(y1),
                  ',', str(x2), ',', str(y2), ',', class_name, '\n']
@@ -398,6 +402,8 @@ def data_augmentation(input_path, output_path):
 
     if os.path.isfile(os.path.join(output_path, "bad_file.txt")):
         os.remove(os.path.join(output_path, "bad_file.txt"))
+
+    os.mkdir(os.path.join(output_path, "bad_files"))
 
     print("Augmenting the Data...")
     # output bounding box text file
@@ -438,5 +444,12 @@ def data_augmentation(input_path, output_path):
                 fp = open(gt_file, "a+")
                 fp.write(line[10] + " " + line[2] + " " + line[4] + " " + line[6] + " " + line[8] + "\n")
             fp.close()
-                
+
+    with open(os.path.join(output_path, "bad_file.txt"), 'r') as fp:
+        for line in fp:
+            image_name = line.replace("\n", "")
+            xml_name = os.path.splitext(image_name)[0] + '.xml'
+            shutil.copyfile(image_name, os.path.join(output_path, "bad_files", os.path.basename(image_name)))
+            shutil.copyfile(xml_name, os.path.join(output_path, "bad_files", os.path.basename(xml_name)))
+
     print('End')
