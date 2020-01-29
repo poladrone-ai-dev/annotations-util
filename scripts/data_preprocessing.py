@@ -4,6 +4,7 @@ import shutil
 import stat
 import glob
 import random
+import time
 from pathlib import Path
 from kmeans import YOLO_Kmeans
 from change_path_name import change_path_name
@@ -112,14 +113,18 @@ def split_test_data(input, image_count):
 
 if __name__ == "__main__":
 
+	preprocessing_start = time.time()
+	change_path_name_start = time.time()
 	if args.labelImg:
 		change_path_name(dataset_path, output_path)
+	change_path_name_end = time.time()
 
+	context_adding_start = time.time()
 	if (args.context):
 		context_adding(dataset_path, args.context)
 	else:
-		# default context == 0
 		context_adding(dataset_path, 0)
+	context_ending_end = time.time()
 
 	if os.path.isdir(os.path.join(output_path, "augmentation_result")):
 		os.chmod(os.path.join(output_path, "augmentation_result"), stat.S_IWUSR)
@@ -128,7 +133,10 @@ if __name__ == "__main__":
 	os.mkdir(os.path.join(output_path, "augmentation_result"))
 
 	augmentation_output_path = os.path.join(output_path, "augmentation_result")
+
+	augmentation_start = time.time()
 	data_augmentation(dataset_path, augmentation_output_path)
+	augmentation_end = time.time()
 
 	bbox_file = os.path.join(output_path, "augmentation_result", "bb_box.txt")
 	class_file = os.path.join(output_path, "augmentation_result", "classes.txt")
@@ -153,7 +161,9 @@ if __name__ == "__main__":
 	if os.path.isdir(darknet_output_path):
 		shutil.rmtree(darknet_output_path)
 
+	darknet_convert_start = time.time()
 	darknet_convert(bbox_file, darknet_output_path, class_file, args.train, args.valid, args.test)
+	darknet_convert_end = time.time()
 
 	cluster_number = 9
 	kmeans = YOLO_Kmeans(cluster_number, bbox_file)
@@ -163,5 +173,16 @@ if __name__ == "__main__":
 	for image_file in glob.glob(os.path.join(output_path, "augmentation_result", "*.jpg")):
 		image_count += 1
 
+	data_split_start = time.time()
 	train_valid_count = split_test_data(os.path.join(output_path, "augmentation_result"), image_count)
 	train_valid_split(os.path.join(output_path, "augmentation_result"), image_count, train_valid_count)
+	data_split_end = time.time()
+
+	preprocessing_end = time.time()
+
+	print("Data preprocessing elapsed time: " + str(preprocessing_end - preprocessing_start) + "s.")
+	print("Change XML path elapsed time: " + str(change_path_name_end - change_path_name_start) + "s.")
+	print("Context adding elapsed time: " + str(context_ending_end - context_adding_start) + "s.")
+	print("Data augmentation elapsed time: " + str(augmentation_end - augmentation_start) + "s.")
+	print("Darknet conversion elapsed time: " + str(darknet_convert_end - darknet_convert_start) + "s.")
+	print("Data split elapsed time: " + str(data_split_end - data_split_start) + "s.")
