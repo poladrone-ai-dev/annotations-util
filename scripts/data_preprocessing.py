@@ -19,7 +19,7 @@ parser.add_argument('-c', '--context', dest='context', help='Context percentage 
 parser.add_argument('--train', type=float, required=False, help="train split (between 0 and 1)", default=0.7)
 parser.add_argument('--valid', type=float, required=False, help="valid split (between 0 and 1)", default=0.2)
 parser.add_argument('--test', type=float, required=False, help="test split (between 0 and 1)", default=0.1)
-parser.add_argument('--labelImg', type=bool, required=False, help="set flag to true if xml file path needs changing", default=False)
+# parser.add_argument('--labelImg', type=bool, required=False, help="set flag to true if xml file path needs changing", default=False)
 
 args = parser.parse_args()
 
@@ -115,15 +115,15 @@ if __name__ == "__main__":
 
 	preprocessing_start = time.time()
 	change_path_name_start = time.time()
-	if args.labelImg:
-		change_path_name(dataset_path, output_path)
+	# if args.labelImg:
+	change_path_name(dataset_path, output_path)
 	change_path_name_end = time.time()
 
 	context_adding_start = time.time()
 	if (args.context):
+		os.chdir(dataset_path)
 		context_adding(dataset_path, args.context)
-	else:
-		context_adding(dataset_path, 0)
+
 	context_ending_end = time.time()
 
 	if os.path.isdir(os.path.join(output_path, "augmentation_result")):

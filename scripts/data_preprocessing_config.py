@@ -19,7 +19,7 @@ parser.add_argument('-c', '--context', dest='context', help='Context percentage 
 parser.add_argument('--train', type=float, required=False, help="train split (between 0 and 1)", default=0.7)
 parser.add_argument('--valid', type=float, required=False, help="valid split (between 0 and 1)", default=0.2)
 parser.add_argument('--test', type=float, required=False, help="test split (between 0 and 1)", default=0.1)
-parser.add_argument('--labelImg', type=bool, required=False, help="set flag to true if xml file path needs changing", default=False)
+# parser.add_argument('--labelImg', type=bool, required=False, help="set flag to true if xml file path needs changing", default=False)
 
 args = parser.parse_args()
 
@@ -175,14 +175,12 @@ if __name__ == "__main__":
         CheckForMissingXML(project_path)
 
         change_path_start_time = time.time()
-        if args.labelImg:
-            change_path_name(project_path, project_path)
+        #if args.labelImg:
+        change_path_name(project_path, project_path)
         change_path_end_time = time.time()
 
         if (args.context):
             context_adding(project_path, args.context)
-        else:
-            context_adding(project_path, 0)
 
         if os.path.isdir(os.path.join(project_path, "augmentation_result")):
             os.chmod(os.path.join(project_path, "augmentation_result"), stat.S_IWUSR)

@@ -346,7 +346,6 @@ def CheckNegativeData(xml_path, output_path):
 def RemoveBadAnnotations(input_path):
     for xml_file in glob.glob(os.path.join(input_path, "*.xml")):
         image_file = os.path.splitext(xml_file)[0] + ".jpg"
-        print(image_file)
         image = cv2.imread(image_file)
         height, width = image.shape[:2]
 
