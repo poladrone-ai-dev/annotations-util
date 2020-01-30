@@ -343,7 +343,7 @@ def CheckNegativeData(xml_path, output_path):
         return True
     return False
 
-def RemoveBadAnnotations(input_path, output_path):
+def RemoveBadAnnotations(input_path):
     for xml_file in glob.glob(os.path.join(input_path, "*.xml")):
         image_file = os.path.splitext(xml_file)[0] + ".jpg"
         print(image_file)
@@ -364,9 +364,9 @@ def RemoveBadAnnotations(input_path, output_path):
             if x1 < 0 or y1 < 0 or x2 > width or y2 > height:
                 print("Found bad annotations in " + xml_file)
                 if os.path.isfile(image_file):
-                    shutil.move(image_file, os.path.join(output_path, os.path.basename(image_file)))
+                    shutil.move(image_file, os.path.join(input_path, "bad_files", os.path.basename(image_file)))
                 if os.path.isfile(xml_file):
-                    shutil.move(xml_file, os.path.join(output_path, os.path.basename(xml_file)))
+                    shutil.move(xml_file, os.path.join(input_path, "bad_files", os.path.basename(xml_file)))
 
 def data_augmentation(input_path, output_path):
     pwd_lines = []
@@ -377,10 +377,10 @@ def data_augmentation(input_path, output_path):
         os.remove(os.path.join(output_path, "bad_file.txt"))
 
     if os.path.isdir(os.path.join(input_path, "bad_files")):
-        os.remove(os.path.join(input_path, "bad_files"))
+        shutil.rmtree(os.path.join(input_path, "bad_files"))
 
-    os.mkdir(os.path.join(output_path, "bad_files"))
-    RemoveBadAnnotations(input_path, os.path.join(output_path, "bad_files"))
+    os.mkdir(os.path.join(input_path, "bad_files"))
+    RemoveBadAnnotations(input_path)
 
     print("Augmenting the Data...")
     out_path = "{}\\bb_box.txt".format(output_path)
