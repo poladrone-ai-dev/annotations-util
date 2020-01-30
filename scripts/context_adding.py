@@ -11,14 +11,12 @@ import os
 import glob
 def context_adding(XML_PATH, contextPercentage = 0):
     print("Adding {} % context".format(contextPercentage))
-    # XML_PATH = r'D:\training_data\young_and_mature_20\combined' # path where the xml resides
-    os.chdir(XML_PATH)
 
     IMG_WIDTH = 0
     IMG_HEIGHT = 0
 
     CONTEXT = float(contextPercentage) # varies between 0 and 1
-    for f in glob.glob('*.xml'):
+    for f in glob.glob(os.path.join(XML_PATH, '*.xml')):
         tree = ET.parse(f)
         root = tree.getroot()
 

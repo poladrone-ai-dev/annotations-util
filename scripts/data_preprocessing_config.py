@@ -39,7 +39,6 @@ def move_data(input, image, split_type):
     image_basename = os.path.basename(image)
     image_base_no_ext = os.path.splitext(os.path.basename(image))[0]
     image_name = os.path.splitext(image)[0]
-    ext = os.path.splitext(image)[1]
 
     try:
         shutil.copyfile(image, os.path.join(input, split_type, image_basename))
@@ -99,36 +98,6 @@ def split_test_data(input, image_count):
             image_name = os.path.splitext(image)[0]
             ext = os.path.splitext(image)[1]
 
-            # cond = len(test_data) <= int(args.test * len(all_images))
-            #
-            # if cond:
-            #     test_data.append(image)
-            #     print("appending " + image + ". test_data size: " + str(test_data))
-            # else:
-            #     print("Test data size exceeded test split. Test data size: " + str(len(test_data)))
-            #     break
-            #
-            # if cond:
-            #     test_data.append(image_name + "-f0" + ext)
-            #     print("appending " + image + ". test_data size: " + str(test_data))
-            # else:
-            #     print("Test data size exceeded test split. Test data size: " + str(len(test_data)))
-            #     break
-            #
-            # if cond:
-            #     test_data.append(image_name + "-f1" + ext)
-            #     print("appending " + image + ". test_data size: " + str(test_data))
-            # else:
-            #     print("Test data size exceeded test split. Test data size: " + str(len(test_data)))
-            #     break
-            #
-            # if cond:
-            #     test_data.append(image_name + "_gaussian_blur" + ext)
-            #     print("appending " + image + ". test_data size: " + str(test_data))
-            # else:
-            #     print("Test data size exceeded test split. Test data size: " + str(len(test_data)))
-            #     break
-
             test_data.append(image)
             test_data.append(image_name + "-f0" + ext)
             test_data.append(image_name + "-f1" + ext)
@@ -160,12 +129,6 @@ if __name__ == "__main__":
     with open(args.config, 'r') as fp:
         for line in fp:
             projects.append(line.replace('\n', ''))
-
-    projects_path = os.path.basename(args.config)
-
-    for file in glob.glob(os.path.join(projects_path, "*")):
-        if not os.path.basename(file) in projects:
-            print(os.path.basename(file) + " not found in config file.")
 
     for project in projects:
         print("<<<<<<<<<<<<<<<<<<<<<Performing data preprocessing for " + project + "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
