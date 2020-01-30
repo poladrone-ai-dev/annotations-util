@@ -52,8 +52,8 @@ def context_adding(XML_PATH, contextPercentage = 0):
 
                         if bndbox.tag == "xmin":
                             newBound = int(bndbox.text) - (CONTEXT * WIDTH)
-                            if newBound < 0:
-                                newBound = 0
+                            # if newBound < 0:
+                            #     newBound = 0
 
                             newBound = round(newBound)
                             bndbox.text = bndbox.text.replace(bndbox.text, str(newBound))
@@ -61,8 +61,8 @@ def context_adding(XML_PATH, contextPercentage = 0):
 
                         if bndbox.tag == "xmax":
                             newBound = int(bndbox.text) + (CONTEXT * WIDTH)
-                            if newBound > IMG_WIDTH:
-                                newBound = IMG_WIDTH
+                            # if newBound > IMG_WIDTH:
+                            #     newBound = IMG_WIDTH
 
                             newBound = round(newBound)
                             bndbox.text = bndbox.text.replace(bndbox.text, str(newBound))
@@ -70,8 +70,8 @@ def context_adding(XML_PATH, contextPercentage = 0):
 
                         if bndbox.tag == "ymin":
                             newBound = int(bndbox.text) - (CONTEXT * HEIGHT)
-                            if newBound < 0:
-                                newBound = 0
+                            # if newBound < 0:
+                            #     newBound = 0
 
                             newBound = round(newBound)
                             bndbox.text = bndbox.text.replace(bndbox.text, str(newBound))
@@ -79,8 +79,8 @@ def context_adding(XML_PATH, contextPercentage = 0):
 
                         if bndbox.tag == "ymax":
                             newBound = int(bndbox.text) + (CONTEXT * HEIGHT)
-                            if newBound > IMG_HEIGHT:
-                                newBound = IMG_HEIGHT
+                            # if newBound > IMG_HEIGHT:
+                            #     newBound = IMG_HEIGHT
 
                             newBound = round(newBound)
                             bndbox.text = bndbox.text.replace(bndbox.text, str(newBound))
