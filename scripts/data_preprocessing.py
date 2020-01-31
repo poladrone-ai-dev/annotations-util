@@ -162,20 +162,27 @@ if __name__ == "__main__":
 		shutil.rmtree(darknet_output_path)
 
 	darknet_convert_start = time.time()
-	darknet_convert(bbox_file, darknet_output_path, class_file, args.train, args.valid, args.test)
+	if os.path.isfile(bbox_file):
+		darknet_convert(bbox_file, darknet_output_path, class_file, args.train, args.valid, args.test)
+	else:
+		print("No bb_box.txt file was generated during augmentation. Skipping Darknet conversion.")
 	darknet_convert_end = time.time()
 
-	cluster_number = 9
-	kmeans = YOLO_Kmeans(cluster_number, bbox_file)
-	kmeans.txt2clusters(darknet_output_path)
+	if os.path.isfile(bbox_file):
+		cluster_number = 9
+		kmeans = YOLO_Kmeans(cluster_number, bbox_file)
+		kmeans.txt2clusters(darknet_output_path)
 
 	image_count = 0
 	for image_file in glob.glob(os.path.join(output_path, "augmentation_result", "*.jpg")):
 		image_count += 1
 
 	data_split_start = time.time()
-	train_valid_count = split_test_data(os.path.join(output_path, "augmentation_result"), image_count)
-	train_valid_split(os.path.join(output_path, "augmentation_result"), image_count, train_valid_count)
+	if image_count > 0:
+		train_valid_count = split_test_data(os.path.join(output_path, "augmentation_result"), image_count)
+		train_valid_split(os.path.join(output_path, "augmentation_result"), image_count, train_valid_count)
+	else:
+		print("No image for train-test split.")
 	data_split_end = time.time()
 
 	preprocessing_end = time.time()
