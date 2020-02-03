@@ -179,7 +179,7 @@ def ImageFlip(imgPath, output_path, xml_file, pwd_lines, class_names):
     element = et.getroot()
     element_objs = element.findall('object')
     element_filename = element.find('filename').text
-    img = cv2.imread(element_filename)
+    img = cv2.imread(imgPath)
     height, width, channels = img.shape
     element_obj_idx = 0
     img_split = element_filename.strip().split('.jpg')
@@ -349,23 +349,34 @@ def RemoveBadAnnotations(input_path):
         image = cv2.imread(image_file)
         height, width = image.shape[:2]
 
-        et = ET.parse(xml_file)
-        element = et.getroot()
-        element_objs = element.findall('object')
+        try:
+            et = ET.parse(xml_file)
 
-        for element_obj in element_objs:
-            obj_bbox = element_obj.find('bndbox')
-            x1 = int(round(float(obj_bbox.find('xmin').text)))
-            y1 = int(round(float(obj_bbox.find('ymin').text)))
-            x2 = int(round(float(obj_bbox.find('xmax').text)))
-            y2 = int(round(float(obj_bbox.find('ymax').text)))
+            element = et.getroot()
+            element_objs = element.findall('object')
 
-            if x1 < 0 or y1 < 0 or x2 > width or y2 > height:
-                print("Found bad annotations in " + xml_file)
-                if os.path.isfile(image_file):
-                    shutil.move(image_file, os.path.join(input_path, "bad_files", os.path.basename(image_file)))
-                if os.path.isfile(xml_file):
-                    shutil.move(xml_file, os.path.join(input_path, "bad_files", os.path.basename(xml_file)))
+            for element_obj in element_objs:
+                obj_bbox = element_obj.find('bndbox')
+                x1 = int(round(float(obj_bbox.find('xmin').text)))
+                y1 = int(round(float(obj_bbox.find('ymin').text)))
+                x2 = int(round(float(obj_bbox.find('xmax').text)))
+                y2 = int(round(float(obj_bbox.find('ymax').text)))
+
+                if x1 < 0 or y1 < 0 or x2 > width or y2 > height:
+                    print("Found bad annotations in " + xml_file)
+                    if os.path.isfile(image_file):
+                        shutil.move(image_file, os.path.join(input_path, "bad_files", os.path.basename(image_file)))
+                    if os.path.isfile(xml_file):
+                        shutil.move(xml_file, os.path.join(input_path, "bad_files", os.path.basename(xml_file)))
+
+        except Exception:
+            print("Could not read " + xml_file + ".The file may have been corrupted.")
+            if os.path.isfile(xml_file):
+                shutil.move(xml_file, os.path.join(input_path, "bad_files", os.path.basename(xml_file)))
+
+            if os.path.isfile(image_file):
+                shutil.move(image_file, os.path.join(input_path, "bad_files", os.path.basename(image_file)))
+
 
 def data_augmentation(input_path, output_path):
     pwd_lines = []
