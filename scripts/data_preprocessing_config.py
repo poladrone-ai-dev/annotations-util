@@ -103,15 +103,19 @@ def split_test_data(input, image_count):
             test_data.append(image_name + "-f1" + ext)
             test_data.append(image_name + "_gaussian_blur" + ext)
 
-            shutil.copyfile(image, os.path.join(input, "test", image_basename))
-            shutil.copyfile(image_name + ".xml", os.path.join(input, "test", image_base_no_ext + ".xml"))
-            shutil.copyfile(image_name + ".txt", os.path.join(input, "test", image_base_no_ext + ".txt"))
+            try:
+                shutil.copyfile(image, os.path.join(input, "test", image_basename))
+                shutil.copyfile(image_name + ".xml", os.path.join(input, "test", image_base_no_ext + ".xml"))
+                shutil.copyfile(image_name + ".txt", os.path.join(input, "test", image_base_no_ext + ".txt"))
 
-            for augmentation in augmentations:
-                shutil.copyfile(image_name + augmentation + ext, os.path.join(input, "test", image_base_no_ext + augmentation + ext))
-                shutil.copyfile(image_name + augmentation + ".xml", os.path.join(input, "test", image_base_no_ext + augmentation + ".xml"))
-                shutil.copyfile(image_name + augmentation + ".txt", os.path.join(input, "test", image_base_no_ext + augmentation + ".txt"))
-                all_images.remove(image_name + augmentation + ext)
+                for augmentation in augmentations:
+                    shutil.copyfile(image_name + augmentation + ext, os.path.join(input, "test", image_base_no_ext + augmentation + ext))
+                    shutil.copyfile(image_name + augmentation + ".xml", os.path.join(input, "test", image_base_no_ext + augmentation + ".xml"))
+                    shutil.copyfile(image_name + augmentation + ".txt", os.path.join(input, "test", image_base_no_ext + augmentation + ".txt"))
+                    all_images.remove(image_name + augmentation + ext)
+
+            except Exception as e:
+                print(e)
 
             no_augment_images.remove(image)
             all_images.remove(image)

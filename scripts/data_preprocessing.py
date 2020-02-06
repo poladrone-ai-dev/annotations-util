@@ -35,12 +35,12 @@ def move_data(input, image, split_type):
 	image_name = os.path.splitext(image)[0]
 	ext = os.path.splitext(image)[1]
 
-	shutil.move(image, os.path.join(input, split_type, image_basename))
-
-	if os.path.isfile(image_name + ".xml"):
+	try:
+		shutil.move(image, os.path.join(input, split_type, image_basename))
 		shutil.move(image_name + ".xml", os.path.join(input, split_type, image_base_no_ext + ".xml"))
-	if os.path.isfile(image_name + ".txt"):
 		shutil.move(image_name + ".txt", os.path.join(input, split_type, image_base_no_ext + ".txt"))
+	except Exception as e:
+		print(e)
 
 def train_valid_split(input, image_count, train_valid_count):
 	augmentations = ["-f0", "-f1", "_gaussian_blur"]
@@ -98,14 +98,18 @@ def split_test_data(input, image_count):
 			test_data.append(image_name + "-f1" + ext)
 			test_data.append(image_name + "_gaussian_blur" + ext)
 
-			shutil.move(image, os.path.join(input, "test", image_basename))
-			shutil.move(image_name + ".xml", os.path.join(input, "test", image_base_no_ext + ".xml"))
-			shutil.move(image_name + ".txt", os.path.join(input, "test", image_base_no_ext + ".txt"))
+			try:
+				shutil.move(image, os.path.join(input, "test", image_basename))
+				shutil.move(image_name + ".xml", os.path.join(input, "test", image_base_no_ext + ".xml"))
+				shutil.move(image_name + ".txt", os.path.join(input, "test", image_base_no_ext + ".txt"))
 
-			for augmentation in augmentations:
-				shutil.move(image_name + augmentation + ext, os.path.join(input, "test", image_base_no_ext + augmentation + ext))
-				shutil.move(image_name + augmentation + ".xml", os.path.join(input, "test", image_base_no_ext + augmentation + ".xml"))
-				shutil.move(image_name + augmentation + ".txt", os.path.join(input, "test", image_base_no_ext + augmentation + ".txt"))
+				for augmentation in augmentations:
+					shutil.move(image_name + augmentation + ext, os.path.join(input, "test", image_base_no_ext + augmentation + ext))
+					shutil.move(image_name + augmentation + ".xml", os.path.join(input, "test", image_base_no_ext + augmentation + ".xml"))
+					shutil.move(image_name + augmentation + ".txt", os.path.join(input, "test", image_base_no_ext + augmentation + ".txt"))
+
+			except Exception as e:
+				print(e)
 
 			no_augment_images.remove(image)
 

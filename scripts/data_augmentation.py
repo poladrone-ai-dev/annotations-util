@@ -400,19 +400,13 @@ def data_augmentation(input_path, output_path):
     for file in xml_paths:
         if file.endswith(".jpg"):
             xml_path = os.path.splitext(file)[0] + ".xml"
-
+            threads = []
             if not CheckNegativeData(xml_path, output_path):
                 print("Performing image flipping on " + file)
                 pwd_lines, class_names = ImageFlip(file, output_path, xml_path, pwd_lines, class_names)
+
                 print("Performing Gaussian blur on " + file)
                 pwd_lines, class_names = GaussianBlur(file, xml_path, output_path, pwd_lines, class_names)
-
-                # for angle in angles:
-                #     print("Performing " + str(angle) + " degrees rotation on " + file)
-                #     pwd_lines, class_names = ImageRotate(file, output_path, xml_path, angle, pwd_lines, class_names)
-                #
-                # print("Performing shearing on " + file)
-                # pwd_lines, class_names = RandomShear(file, output_path, xml_path, pwd_lines, class_names)
 
     if os.path.isfile(os.path.join(output_path, "class.txt")):
         os.remove(os.path.join(output_path, "class.txt"))
